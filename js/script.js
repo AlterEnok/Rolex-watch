@@ -34,3 +34,14 @@ const scrollHeader = () => {
         : header.classList.remove('scroll-header')
 }
 window.addEventListener('scroll', scrollHeader)
+
+/*=============== TESTIMONIAL SWIPER ===============*/
+let testimonialSwiper = new Swiper(".testimonial-swiper", {
+    spaceBetween: 30,
+    loop: 'true',
+
+    navigation: {
+        nextEl: ".swiper-button-next",
+        prevEl: ".swiper-button-prev",
+    },
+});
