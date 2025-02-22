@@ -98,24 +98,154 @@ window.addEventListener('scroll', scrollUp)
 /*=============== SHOW CART ===============*/
 const cart = document.getElementById('cart'),
     cartShop = document.getElementById('cart-shop'),
-    cartClose = document.getElementById('cart-close')
+    cartClose = document.getElementById('cart-close'),
+    cartContainer = document.querySelector('.cart__container'),
+    cartPricesTotal = document.querySelector('.cart__prices-total'),
+    cartPricesItems = document.querySelector('.cart__prices-item');
 
-/*===== CART SHOW =====*/
-/* Validate if constant exists */
+let cartItems = []; // Хранилище товаров
+
+/*===== Показать корзину =====*/
 if (cartShop) {
     cartShop.addEventListener('click', () => {
-        cart.classList.add('show-cart')
-    })
+        cart.classList.add('show-cart');
+        updateCart();
+    });
 }
 
-/*===== CART HIDDEN =====*/
-/* Validate if constant exists */
+/*===== Закрыть корзину =====*/
 if (cartClose) {
     cartClose.addEventListener('click', () => {
-        cart.classList.remove('show-cart')
-    })
+        cart.classList.remove('show-cart');
+    });
 }
 
+/*===== Добавление товаров в корзину из всех секций =====*/
+document.querySelectorAll('.products__button, .featured__button, .new__button').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const productCard = e.target.closest('.products__card, .featured__card, .new__card'); // Исправлено
+        if (!productCard) return;
+
+        const nameElement = productCard.querySelector('.products__title, .featured__title, .new__title'); // Исправлено
+        const priceElement = productCard.querySelector('.products__price, .featured__price, .new__price'); // Исправлено
+        const imgElement = productCard.querySelector('.products__img, .featured__img, .new__img'); // Исправлено
+
+        if (!nameElement || !priceElement || !imgElement) {
+            console.error("Ошибка: не найдены необходимые элементы товара.");
+            return;
+        }
+
+        const name = nameElement.innerText.trim();
+        const priceText = priceElement.innerText.replace(/[^\d.]/g, '');
+        const price = parseFloat(priceText);
+        const imgSrc = imgElement.src;
+
+        if (isNaN(price)) {
+            console.error("Ошибка: цена товара не распарсилась корректно", priceText);
+            return;
+        }
+
+        addToCart(name, price, imgSrc);
+    });
+});
+
+/*===== Добавление товара из секции Home =====*/
+const homeButton = document.querySelector('.home__button');
+if (homeButton) {
+    homeButton.addEventListener('click', () => {
+        const name = "B720 Watch";
+        const price = 1245;
+        const imgSrc = "img/home.png"; // Используем изображение из home секции
+
+        addToCart(name, price, imgSrc);
+    });
+}
+
+/*===== Функция добавления в корзину =====*/
+function addToCart(name, price, imgSrc) {
+    let existingItem = cartItems.find(item => item.name === name);
+
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cartItems.push({ name, price, quantity: 1, imgSrc });
+    }
+
+    updateCart();
+}
+
+/*===== Обновление корзины =====*/
+function updateCart() {
+    cartContainer.innerHTML = ''; // Очищаем контейнер
+    let totalItems = 0;
+    let totalPrice = 0;
+
+    cartItems.forEach(item => {
+        totalItems += item.quantity;
+        totalPrice += item.price * item.quantity;
+
+        const cartCard = document.createElement('article');
+        cartCard.classList.add('cart__card');
+        cartCard.innerHTML = `
+            <div class="cart__box">
+                <img src="${item.imgSrc}" class="cart__img">
+            </div>
+            <div class="cart__details">
+                <h3 class="cart__title">${item.name}</h3>
+                <span class="cart__price">$${(item.price * item.quantity).toFixed(2)}</span>
+                <div class="cart__amount">
+                    <div class="cart__amount-content">
+                        <button class="cart__amount-box decrease" data-name="${item.name}">-</button>
+                        <span class="cart__amount-number">${item.quantity}</span>
+                        <button class="cart__amount-box increase" data-name="${item.name}">+</button>
+                    </div>
+                    <i class="bx bx-trash-alt cart__amount-trash" data-name="${item.name}"></i>
+                </div>
+            </div>
+        `;
+
+        cartContainer.appendChild(cartCard);
+    });
+
+    cartPricesItems.innerText = `${totalItems} items`;
+    cartPricesTotal.innerText = `$${totalPrice.toFixed(2)}`;
+
+    if (cartItems.length === 0) {
+        cartPricesItems.innerText = "0 items";
+        cartPricesTotal.innerText = "$0.00";
+    }
+
+    document.querySelectorAll('.increase').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const name = e.target.dataset.name;
+            cartItems.find(item => item.name === name).quantity++;
+            updateCart();
+        });
+    });
+
+    document.querySelectorAll('.decrease').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const name = e.target.dataset.name;
+            const item = cartItems.find(item => item.name === name);
+            if (item.quantity > 1) {
+                item.quantity--;
+            } else {
+                cartItems = cartItems.filter(i => i.name !== name);
+            }
+            updateCart();
+        });
+    });
+
+    document.querySelectorAll('.cart__amount-trash').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const name = e.target.dataset.name;
+            cartItems = cartItems.filter(item => item.name !== name);
+            updateCart();
+        });
+    });
+}
+
+updateCart();
 
 /*=============== DARK LIGHT THEME ===============*/
 const themeButton = document.getElementById('theme-button')
