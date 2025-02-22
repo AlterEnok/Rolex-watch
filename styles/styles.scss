@@ -869,7 +869,9 @@ body.dark-theme {
     top: 0;
     right: -100%;
     padding: 3.5rem 2rem;
+    border: 2px solid var(--border-color);
     transition: .4s;
+
 }
 
 .cart__title-center {
